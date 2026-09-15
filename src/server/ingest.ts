@@ -10,6 +10,7 @@ import { enqueue, QUEUE } from "./jobs/queue";
 import { storeCapturedImage } from "./media/pipeline";
 import { followRedirects } from "./net/fetch";
 import { InvalidUrlError, normalizeUrlInput, type NormalizedUrl } from "./normalize/url";
+import type { CaptureAsset } from "./resolve/captureAssets";
 import { captureToContent, type CapturePayload } from "./resolve/extension";
 import { wordCount } from "./text/html";
 import { BODY_TEXT_LIMIT, clampText, HTML_LIMIT, SUMMARY_LIMIT, TITLE_LIMIT } from "./text/size";
@@ -107,6 +108,51 @@ export interface CaptureIngestResult {
    * makes captures of gated Instagram posts work at all.
    */
   captured: boolean;
+  /** How many pictures arrived as bytes rather than as a URL to fetch later. */
+  storedAssets: number;
+}
+
+/**
+ * Writes the media rows for a capture, storing inline bytes as they land.
+ *
+ * Bytes the extension fetched with the person's own cookies are the only copy
+ * we will ever get of a picture behind a login, so they are written straight
+ * through; rows with only a URL are left for the media job to download.
+ */
+async function storeCaptureAssets(itemId: string, assets: CaptureAsset[], fallbackAlt: string | null): Promise<number> {
+  if (!assets.length) return 0;
+
+  const mediaIds = await replaceItemMedia(
+    itemId,
+    assets.map((asset) => ({
+      kind: asset.kind,
+      // A video's bytes are not ours to download; the row points at the source
+      // and carries the poster frame as its picture.
+      remoteUrl: asset.inline ? null : (asset.remoteUrl ?? asset.posterUrl),
+      width: asset.width,
+      height: asset.height,
+      alt: asset.alt ?? fallbackAlt,
+    })),
+  );
+
+  let stored = 0;
+  for (const [index, asset] of assets.entries()) {
+    const mediaId = mediaIds[index];
+    if (!mediaId || !asset.inline) continue;
+    try {
+      await storeCapturedImage({
+        itemId,
+        mediaId,
+        base64: asset.inline.base64,
+        contentType: asset.inline.contentType,
+      });
+      stored += 1;
+    } catch (err) {
+      // One unreadable picture must not cost us the post it came with.
+      console.warn(`[ingest] storing captured image failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+  return stored;
 }
 
 /**
@@ -117,8 +163,8 @@ export interface CaptureIngestResult {
 export async function ingestCapture(options: CaptureIngestOptions): Promise<CaptureIngestResult> {
   const { userId, payload, source } = options;
   const normalized = normalizeUrlInput(payload.url);
-  const { content, image } = captureToContent(payload, normalized, source);
-  const captured = Boolean(content.title && (content.text || content.media?.length));
+  const { content, assets } = captureToContent(payload, normalized, source);
+  const captured = Boolean(content.title && (content.text || assets.length));
 
   const { item, created } = await insertItem({
     userId,
@@ -153,34 +199,19 @@ export async function ingestCapture(options: CaptureIngestOptions): Promise<Capt
   await replaceItemContent(item.id, {
     text: bodyText,
     html: clampText(content.html ?? null, HTML_LIMIT),
-    og: null,
+    // Where the post's links actually went, who was quoted, the counts at the
+    // moment it was saved: the parts of a capture that have nowhere else to
+    // live, and that a later re-resolve could never reconstruct.
+    og: content.meta ?? null,
     wordCount: bodyText ? wordCount(bodyText) : 0,
     resolver: source,
   });
 
-  if (image) {
-    const mediaIds = await replaceItemMedia(item.id, [
-      { kind: "image", remoteUrl: null, alt: title ?? null, width: null, height: null },
-    ]);
-    const mediaId = mediaIds[0];
-    if (mediaId) {
-      await storeCapturedImage({ itemId: item.id, mediaId, base64: image.base64, contentType: image.contentType }).catch(
-        (err) => {
-          console.warn(`[ingest] storing captured image failed: ${err instanceof Error ? err.message : String(err)}`);
-        },
-      );
-    }
-  } else if (content.media?.length) {
-    await replaceItemMedia(
-      item.id,
-      content.media.slice(0, 4).map((entry) => ({
-        kind: entry.kind,
-        remoteUrl: entry.remoteUrl,
-        width: entry.width ?? null,
-        height: entry.height ?? null,
-        alt: entry.alt ?? title ?? null,
-      })),
-    );
+  const storedAssets = await storeCaptureAssets(item.id, assets, title ?? null);
+
+  // Anything the extension could not inline still needs downloading.
+  if (assets.some((asset) => !asset.inline && (asset.remoteUrl || asset.posterUrl))) {
+    await enqueue(QUEUE.media, { itemId: item.id }, { singletonKey: `media:${item.id}` });
   }
 
   if (captured) {
@@ -190,7 +221,7 @@ export async function ingestCapture(options: CaptureIngestOptions): Promise<Capt
     await enqueue(QUEUE.resolve, { itemId: item.id, userId }, { singletonKey: item.id });
   }
 
-  return { item: (await getItem(userId, item.id)) ?? item, created, captured };
+  return { item: (await getItem(userId, item.id)) ?? item, created, captured, storedAssets };
 }
 
 export { InvalidUrlError };

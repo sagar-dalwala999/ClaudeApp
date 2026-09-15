@@ -6,19 +6,38 @@
  * A hand-edited title is marked `source = "manual"`, which stops the AI from
  * overwriting it later.
  */
-import { deleteItem, getItem, removeFromCollection, addToCollection, setItemTags, updateItem } from "@/server/db/queries/items";
+import { deleteItem, getItem, getItemContent, removeFromCollection, addToCollection, setItemTags, updateItem } from "@/server/db/queries/items";
 import { handle, json, notFound, readJson, requireApiUser } from "@/server/http/respond";
 import { enumField, optionalBoolean, optionalString, stringArrayField } from "@/server/http/validate";
 import { getStorage } from "@/server/media/storage";
 import { ITEM_STATUSES, ITEM_TYPES } from "@/lib/vocab";
+import type { CaptureLink } from "@/server/resolve/captureAssets";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * The parts of a capture worth showing back: where the post's links actually
+ * went, who it quoted. Stored as free-form JSON, so it is read defensively.
+ */
+function readCaptureMeta(og: unknown): { links: CaptureLink[]; quoted: unknown } | null {
+  if (!og || typeof og !== "object" || Array.isArray(og)) return null;
+  const meta = og as Record<string, unknown>;
+  if (meta.captured !== true) return null;
+  const links = Array.isArray(meta.links)
+    ? (meta.links as CaptureLink[]).filter((link) => link && typeof link.url === "string")
+    : [];
+  if (!links.length && !meta.quoted) return null;
+  return { links, quoted: meta.quoted ?? null };
+}
 
 export const GET = handle(async ({ params }) => {
   const user = await requireApiUser();
   const item = await getItem(user.id, params.id);
   if (!item) throw notFound("No such item");
-  return json({ item });
+  // Only the detail view needs this, so it is one extra read here rather than
+  // a join on every list query.
+  const content = await getItemContent(item.id);
+  return json({ item, capture: readCaptureMeta(content?.og) });
 });
 
 export const PATCH = handle(async ({ req, params }) => {

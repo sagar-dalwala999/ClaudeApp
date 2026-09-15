@@ -8,7 +8,7 @@
  * Everything else can be re-fetched; the note cannot.
  */
 import { useEffect, useRef, useState } from "react";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, type CaptureMeta } from "@/lib/api";
 import { mediaUrl, relativeDay, toClientItem, type ClientItem } from "@/lib/item";
 import { PLATFORM_LABELS, STATUS_LABELS, TYPE_LABELS, isPlatform, isItemStatus, isItemType } from "@/lib/vocab";
 
@@ -31,6 +31,7 @@ export function ItemDetail({ item, position, onClose, onPrev, onNext, onChanged,
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [capture, setCapture] = useState<CaptureMeta | null>(null);
   const displayedTags = tagsDirty ? tagDraft : item.tags.join(" ");
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -53,6 +54,25 @@ export function ItemDetail({ item, position, onClose, onPrev, onNext, onChanged,
     };
     image.src = url;
   }, [item.id, item.media]);
+
+  // What the extension saw that the URL alone never says: where a shortener
+  // actually went, what the post was quoting. Absent for anything not captured.
+  // The panel is keyed by item id upstream, so this starts empty on every item
+  // and never needs clearing here.
+  useEffect(() => {
+    let live = true;
+    api
+      .getItem(item.id)
+      .then((res) => {
+        if (live) setCapture(res.capture);
+      })
+      .catch(() => {
+        // The panel is already showing the item; this is extra, not essential.
+      });
+    return () => {
+      live = false;
+    };
+  }, [item.id]);
 
   const save = async (patch: Record<string, unknown>, message: string) => {
     setBusy(true);
@@ -118,6 +138,29 @@ export function ItemDetail({ item, position, onClose, onPrev, onNext, onChanged,
             <p className="detail-warning">
               Only the link was readable — this platform hides its content from servers.
             </p>
+          )}
+
+          {capture && capture.links.length > 0 && (
+            <section className="detail-links" aria-label="Links in this post">
+              <span>{capture.links.length === 1 ? "Link in this post" : "Links in this post"}</span>
+              <ul>
+                {capture.links.map((link) => (
+                  <li key={link.url}>
+                    <a href={link.url} target="_blank" rel="noreferrer noopener">
+                      {link.display ?? link.url}
+                    </a>
+                    {link.title && link.title !== link.display && <em>{link.title}</em>}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {capture?.quoted?.text && (
+            <section className="detail-links" aria-label="Quoted post">
+              <span>Quoting {capture.quoted.authorHandle ?? capture.quoted.author ?? "another post"}</span>
+              <blockquote>{capture.quoted.text}</blockquote>
+            </section>
           )}
           {item.lastError && item.status !== "ready" && <p className="detail-warning">{item.lastError}</p>}
 
