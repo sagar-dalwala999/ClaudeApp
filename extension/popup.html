@@ -43,12 +43,36 @@
       #status.error { color: #f28b82; }
       details { margin-top: 12px; }
       summary { color: #7c7c7c; cursor: pointer; }
+      .toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 12px 0 0;
+        padding: 8px 9px;
+        background: #101010;
+        border: 1px solid #1e1e1e;
+        border-radius: 4px;
+        text-transform: none;
+        letter-spacing: 0;
+        font-size: 12px;
+        color: #d4d4d4;
+        cursor: pointer;
+      }
+      .toggle input { width: 14px; height: 14px; margin: 0; flex: none; accent-color: #8a8a8a; }
+      .toggle span { line-height: 1.4; }
+      .hint { margin: 6px 0 0; color: #5e5e5e; line-height: 1.5; }
     </style>
   </head>
   <body>
     <h1>Looks</h1>
     <button id="save" type="button">Save this page</button>
     <p id="status">Saves the page you are on, including a picture it can fetch.</p>
+
+    <label class="toggle" for="postButtons">
+      <input id="postButtons" type="checkbox" checked />
+      <span>Show a save button on every post</span>
+    </label>
+    <p class="hint">On X, Instagram, Reddit and Threads. Saves that one post — its text, author, every picture and video, and where its links actually go.</p>
 
     <details id="settings">
       <summary>Connection</summary>

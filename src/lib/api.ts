@@ -40,6 +40,19 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return body as T;
 }
 
+/** What the extension recorded about a post that the page itself resolved. */
+export interface CaptureLinkSummary {
+  url: string;
+  /** The destination the post displayed, when the URL was a shortener. */
+  display: string | null;
+  title: string | null;
+}
+
+export interface CaptureMeta {
+  links: CaptureLinkSummary[];
+  quoted: { author?: string | null; authorHandle?: string | null; text?: string | null } | null;
+}
+
 export interface ItemListResponse {
   items: ItemLike[];
   nextCursor: string | null;
@@ -141,8 +154,8 @@ export const api = {
     });
   },
 
-  getItem(id: string): Promise<{ item: ItemLike }> {
-    return request<{ item: ItemLike }>(`/api/items/${id}`);
+  getItem(id: string): Promise<{ item: ItemLike; capture: CaptureMeta | null }> {
+    return request<{ item: ItemLike; capture: CaptureMeta | null }>(`/api/items/${id}`);
   },
 
   patchItem(id: string, patch: Record<string, unknown>): Promise<{ item: ItemLike }> {

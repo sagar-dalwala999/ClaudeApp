@@ -1,13 +1,39 @@
 {
   "manifest_version": 3,
   "name": "Looks — save to your archive",
-  "version": "0.2.0",
-  "description": "Capture the page you are on, including logged-in Instagram and X posts, into your own Looks archive.",
+  "version": "0.3.0",
+  "description": "A save button on every post, plus a toolbar button for any page. Captures what you can see, including logged-in Instagram and X.",
   "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": [
+    "https://x.com/*",
+    "https://twitter.com/*",
+    "https://www.instagram.com/*",
+    "https://instagram.com/*",
+    "https://www.reddit.com/*",
+    "https://www.threads.com/*",
+    "https://www.threads.net/*"
+  ],
   "optional_host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"
   },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://x.com/*",
+        "https://twitter.com/*",
+        "https://www.instagram.com/*",
+        "https://instagram.com/*",
+        "https://www.reddit.com/*",
+        "https://www.threads.com/*",
+        "https://www.threads.net/*"
+      ],
+      "js": ["lib.js", "platforms.js", "post-capture.js"],
+      "css": ["post-capture.css"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
   "action": {
     "default_popup": "popup.html",
     "default_title": "Save to Looks"
