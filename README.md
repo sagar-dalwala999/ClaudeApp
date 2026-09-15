@@ -165,15 +165,34 @@ whole pipeline. `ENABLE_LIVE_RESOLVERS=false` turns the network off entirely
   card is link-and-embed only **unless** you capture it with the extension.
 - **Anything behind a login** — the extension. It reads the page you are
   already signed into, with your cookies, from your browser.
+- **A post whose substance is behind a shortener** — the extension's per-post
+  button, which keeps the destination the page displays next to the link.
 
 ---
 
 ## The extension
 
-`extension/` is a Manifest V3 extension: it captures the page in front of you
-(Open Graph tags, platform DOM, visible prose, the largest rendered image),
-fetches the image bytes with your session, and posts both to `/api/ingest` with
-an ingest token. Install instructions in [`extension/README.md`](extension/README.md).
+`extension/` is a Manifest V3 extension, and it captures two ways.
+
+**A button on every post.** On X, Instagram, Reddit and Threads it puts a small
+picture-frame button in each post's action row. Clicking it saves *that post*:
+its permalink, author and handle, the text as rendered, every picture and video
+in it, who it quotes, and its outbound links — with the destinations the page
+had already resolved.
+
+That last part is why the button exists. A launch post that is one line plus a
+`t.co` resolves server-side to one line: the substance is behind a shortener
+nobody followed. In the page, the reader can see `apps.apple.com/us/app/…`
+right there in the markup, so the capture keeps it and writes it into the
+item's body, where search and the summariser can both reach it.
+
+**A button in the toolbar**, for anything else: it reads the page in front of
+you (Open Graph tags, platform DOM, visible prose, the largest rendered image).
+
+Either way the service worker fetches the image bytes with your session — the
+one thing a server-side fetch can never do for a logged-in page — and posts
+everything to `/api/ingest` with an ingest token. Install instructions in
+[`extension/README.md`](extension/README.md).
 
 Ingest tokens are created in **Settings → Ingest tokens** or with
 `npm run tokens:create -- "Arc extension"`. They are stored hashed and shown

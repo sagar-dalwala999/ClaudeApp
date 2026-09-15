@@ -46,12 +46,12 @@ export const POST = handle(async ({ req, url }) => {
   const user = await requireIngestUser(req, url);
   const { payload, source } = await readPayload(req);
 
-  const { item, created } = await ingestCapture({ userId: user.id, payload, source }).catch((err) => {
+  const { item, created, captured, storedAssets } = await ingestCapture({ userId: user.id, payload, source }).catch((err) => {
     if (err instanceof InvalidUrlError) throw badRequest(err.message);
     throw err;
   });
 
-  return new Response(JSON.stringify({ item, created }), {
+  return new Response(JSON.stringify({ item, created, captured, storedAssets }), {
     status: created ? 201 : 200,
     headers: { "content-type": "application/json", ...extensionCors(req) },
   });

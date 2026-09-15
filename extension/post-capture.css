@@ -1,0 +1,116 @@
+/**
+ * The button has to sit in someone else's design without becoming part of it:
+ * quiet until you hover, never wider than the action row it joins, and immune
+ * to whatever the host page does to buttons.
+ */
+
+.looks-capture-mount {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  margin-left: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+button.looks-capture-btn {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  font: 14px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 120ms ease, background-color 120ms ease, transform 120ms ease;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+button.looks-capture-btn svg {
+  display: block;
+  width: 17px;
+  height: 17px;
+  pointer-events: none;
+}
+
+button.looks-capture-btn:hover,
+button.looks-capture-btn:focus-visible {
+  opacity: 1;
+  background-color: rgba(125, 125, 125, 0.18);
+}
+
+button.looks-capture-btn:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+
+button.looks-capture-btn:active {
+  transform: scale(0.92);
+}
+
+button.looks-capture-btn[data-state="saving"] {
+  opacity: 1;
+  animation: looks-capture-pulse 900ms ease-in-out infinite;
+}
+
+button.looks-capture-btn[data-state="saved"] {
+  opacity: 1;
+  color: #1f9d55;
+  background-color: rgba(31, 157, 85, 0.16);
+}
+
+button.looks-capture-btn[data-state="error"] {
+  opacity: 1;
+  color: #d64545;
+  background-color: rgba(214, 69, 69, 0.16);
+}
+
+@keyframes looks-capture-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button.looks-capture-btn {
+    transition: none;
+  }
+  button.looks-capture-btn[data-state="saving"] {
+    animation: none;
+  }
+}
+
+.looks-capture-toast {
+  all: unset;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2147483000;
+  max-width: 280px;
+  width: max-content;
+  padding: 6px 9px;
+  border-radius: 6px;
+  font: 12px/1.35 system-ui, -apple-system, "Segoe UI", sans-serif;
+  white-space: normal;
+  pointer-events: none;
+  background: #17181a;
+  color: #ededed;
+  border: 1px solid #2c2e31;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.looks-capture-toast--error {
+  background: #2a1414;
+  border-color: #5a2626;
+  color: #ffd9d9;
+}

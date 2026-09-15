@@ -309,6 +309,61 @@
   color: var(--looks-text);
 }
 
+/* What the extension read off the post: the links with the destinations the
+   page had already resolved, and whatever it was quoting. */
+.detail-links {
+  margin: 0 0 14px;
+}
+
+.detail-links span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--looks-dim);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.detail-links ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+
+.detail-links li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.detail-links a {
+  color: var(--looks-accent);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.detail-links a:hover {
+  text-decoration: underline;
+}
+
+.detail-links em {
+  color: var(--looks-dim);
+  font-style: normal;
+}
+
+.detail-links blockquote {
+  margin: 0;
+  padding-left: 10px;
+  border-left: 2px solid var(--looks-border);
+  color: var(--looks-text);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
 .detail-meta {
   display: grid;
   grid-template-columns: 74px 1fr;

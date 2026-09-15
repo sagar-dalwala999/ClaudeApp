@@ -5,6 +5,7 @@ const saveButton = document.getElementById("save");
 const testButton = document.getElementById("test");
 const serverInput = document.getElementById("serverUrl");
 const tokenInput = document.getElementById("token");
+const postButtonsInput = document.getElementById("postButtons");
 
 function setStatus(text, kind) {
   statusEl.textContent = text;
@@ -12,9 +13,11 @@ function setStatus(text, kind) {
 }
 
 async function loadSettings() {
-  const stored = await chrome.storage.local.get(["serverUrl", "token"]);
+  const stored = await chrome.storage.local.get(["serverUrl", "token", "postButtons"]);
   serverInput.value = stored.serverUrl || "";
   tokenInput.value = stored.token || "";
+  // Unset means on: the buttons are the point of the extension.
+  postButtonsInput.checked = stored.postButtons !== false;
   if (!stored.serverUrl || !stored.token) {
     document.getElementById("settings").open = true;
     setStatus("Set the server URL and an ingest token to start saving.", "error");
@@ -47,6 +50,18 @@ testButton.addEventListener("click", async () => {
   const result = await chrome.runtime.sendMessage({ type: "looks:testConnection" });
   if (result && result.ok) setStatus(result.message || "Connected.", "ok");
   else setStatus((result && result.error) || "Could not connect.", "error");
+});
+
+postButtonsInput.addEventListener("change", async () => {
+  await chrome.storage.local.set({ postButtons: postButtonsInput.checked });
+  // The open tabs pick this up through chrome.storage.onChanged; a tab opened
+  // before the extension was installed still needs one reload.
+  setStatus(
+    postButtonsInput.checked
+      ? "Save buttons on. Reload any open X, Instagram, Reddit or Threads tab."
+      : "Save buttons off.",
+    "ok",
+  );
 });
 
 void loadSettings();
