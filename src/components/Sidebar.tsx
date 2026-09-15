@@ -1,23 +1,39 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { elementsOf, type Collection, type Library } from "@/lib/data";
+import type { ClientCollection, ClientItem } from "@/lib/item";
 import { SidebarStrip } from "./SidebarStrip";
 
 interface Props {
-  library: Library;
-  collections: Collection[];
+  collections: ClientCollection[];
+  /** Up to a dozen items per collection id, for the canvas thumbnail strips. */
+  previews: Record<string, ClientItem[]>;
+  /** Strip for the virtual "Everything" row. */
+  recent: ClientItem[];
+  totalCount: number;
   activeId: string;
   onSelect(id: string): void;
   creating: boolean;
   onCreate(name: string): void;
   onCancelCreate(): void;
+  onDelete(id: string): void;
 }
 
-export function Sidebar({ library, collections, activeId, onSelect, creating, onCreate, onCancelCreate }: Props) {
+export function Sidebar({
+  collections,
+  previews,
+  recent,
+  totalCount,
+  activeId,
+  onSelect,
+  creating,
+  onCreate,
+  onCancelCreate,
+  onDelete,
+}: Props) {
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Keep the active row in view when switching via keyboard.
+  // Keep the active row in view when switching with the keyboard.
   useEffect(() => {
     const row = listRef.current?.querySelector<HTMLElement>(`[data-id="${CSS.escape(activeId)}"]`);
     row?.scrollIntoView({ block: "nearest" });
@@ -25,42 +41,58 @@ export function Sidebar({ library, collections, activeId, onSelect, creating, on
 
   return (
     <nav ref={listRef} className="sidebar" aria-label="Collections">
-      {collections.map((c, i) => (
-        <div key={c.id}>
-          <CollectionRow
-            collection={c}
-            library={library}
-            active={c.id === activeId}
-            onSelect={() => onSelect(c.id)}
-          />
-          {creating && i === 0 && <NewCollectionRow onCreate={onCreate} onCancel={onCancelCreate} />}
-        </div>
+      <CollectionRow
+        id="everything"
+        name="Everything"
+        count={totalCount}
+        active={activeId === "everything"}
+        onSelect={() => onSelect("everything")}
+        preview={recent}
+      />
+      {creating && <NewCollectionRow onCreate={onCreate} onCancel={onCancelCreate} />}
+      {collections.map((collection) => (
+        <CollectionRow
+          key={collection.id}
+          id={collection.id}
+          name={collection.name}
+          count={collection.count}
+          active={collection.id === activeId}
+          onSelect={() => onSelect(collection.id)}
+          onDelete={() => onDelete(collection.id)}
+          preview={previews[collection.id] ?? []}
+        />
       ))}
-      {creating && collections.length === 0 && <NewCollectionRow onCreate={onCreate} onCancel={onCancelCreate} />}
-      {collections.length === 0 && !creating && <div className="sidebar-empty">No collections match.</div>}
+      {!collections.length && !creating && (
+        <div className="sidebar-empty">No collections yet. Press ⇧⌘N to make one.</div>
+      )}
     </nav>
   );
 }
 
 function CollectionRow({
-  collection,
-  library,
+  id,
+  name,
+  count,
   active,
   onSelect,
+  onDelete,
+  preview,
 }: {
-  collection: Collection;
-  library: Library;
+  id: string;
+  name: string;
+  count: number;
   active: boolean;
   onSelect(): void;
+  onDelete?(): void;
+  preview: ClientItem[];
 }) {
-  const preview = elementsOf(library, collection).slice(0, 12);
   return (
     <div
       className={`collection-row${active ? " active" : ""}`}
-      data-id={collection.id}
+      data-id={id}
       role="button"
       tabIndex={0}
-      aria-pressed={active}
+      aria-current={active}
       onClick={onSelect}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -68,45 +100,58 @@ function CollectionRow({
           onSelect();
         }
       }}
-      title={collection.name}
     >
-      <span className="name">{collection.name}</span>
+      <div className="row-head">
+        <span className="name" title={name}>
+          {name}
+        </span>
+        <span className="count">{count}</span>
+        {onDelete && !active && (
+          <button
+            type="button"
+            className="row-delete"
+            aria-label={`Delete collection ${name}`}
+            title="Delete collection (items are kept)"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+          >
+            ×
+          </button>
+        )}
+      </div>
       <SidebarStrip elements={preview} />
-      <span className="count">{collection.elementIds.length}</span>
     </div>
   );
 }
 
 function NewCollectionRow({ onCreate, onCancel }: { onCreate(name: string): void; onCancel(): void }) {
-  const [name, setName] = useState("");
+  const [value, setValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
-  const commit = () => {
-    const trimmed = name.trim();
-    if (trimmed) onCreate(trimmed);
-    else onCancel();
-  };
+
   return (
-    <div className="collection-row editing active">
-      <span className="name">
+    <div className="collection-row editing">
+      <div className="row-head">
         <input
           ref={inputRef}
-          value={name}
-          placeholder="New collection"
+          value={value}
+          placeholder="Collection name"
           aria-label="New collection name"
-          onChange={(e) => setName(e.target.value)}
-          onBlur={commit}
+          onChange={(e) => setValue(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter") commit();
-            else if (e.key === "Escape") onCancel();
-            e.stopPropagation();
+            if (e.key === "Enter" && value.trim()) onCreate(value.trim());
+            if (e.key === "Escape") onCancel();
+          }}
+          onBlur={() => {
+            if (!value.trim()) onCancel();
           }}
         />
-      </span>
-      <span />
-      <span className="count">0</span>
+      </div>
     </div>
   );
 }

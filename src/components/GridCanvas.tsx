@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { LooksElement } from "@/lib/data";
+import type { ClientItem } from "@/lib/item";
 import { ART_WIDTH, drawCover, getArt, subscribeArt } from "@/lib/art";
 import {
   AUTHOR_GAP,
@@ -22,11 +22,11 @@ export interface GridApi {
 }
 
 interface Props {
-  elements: LooksElement[];
+  elements: ClientItem[];
   settings: Settings;
   selectedId: string | null;
   onSelect(id: string | null): void;
-  onOpen(el: LooksElement): void;
+  onOpen(el: ClientItem): void;
   emptyMessage?: string;
   apiRef: React.RefObject<GridApi | null>;
 }
@@ -181,7 +181,7 @@ export function GridCanvas({ elements, settings, selectedId, onSelect, onOpen, a
       }
       if (settings.showAuthors) {
         ctx.fillStyle = COLORS.dim;
-        ctx.fillText(`by @${c.el.author}`, tx, ty + 1);
+        ctx.fillText(`by @${c.el.author}`, tx, ty + 1, Math.max(0, c.w - CARD_PAD_X * 2));
       }
 
       ctx.beginPath();

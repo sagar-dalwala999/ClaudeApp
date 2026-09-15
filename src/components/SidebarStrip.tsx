@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { LooksElement } from "@/lib/data";
+import type { ClientItem } from "@/lib/item";
 import { drawCover, getArt, subscribeArt } from "@/lib/art";
 
 interface Props {
-  elements: LooksElement[];
+  elements: ClientItem[];
   thumb?: number;
   gap?: number;
 }

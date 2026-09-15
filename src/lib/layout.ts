@@ -1,7 +1,7 @@
-import type { LooksElement } from "./data";
+import type { ClientItem } from "./item";
 
 export interface CardLayout {
-  el: LooksElement;
+  el: ClientItem;
   index: number;
   col: number;
   x: number;
@@ -113,7 +113,7 @@ export function wrapText(text: string, maxWidth: number, maxLines: number, measu
   return lines;
 }
 
-export function layoutGrid(elements: LooksElement[], o: LayoutOptions): GridLayout {
+export function layoutGrid(elements: ClientItem[], o: LayoutOptions): GridLayout {
   const inner = Math.max(0, o.width - o.pad * 2);
   const cols = Math.max(1, Math.floor((inner + o.gap) / (o.minColW + o.gap)));
   const colW = Math.floor((inner - o.gap * (cols - 1)) / cols);

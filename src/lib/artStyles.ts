@@ -2,7 +2,7 @@
  * Procedural "media" generators, one per ArtStyle. Each draws into a
  * (w × h) context using only the supplied seeded RNG, so output is stable.
  */
-import type { ArtStyle } from "./data";
+import type { ArtStyle } from "./item";
 import { chance, int, pick, range, type Rng } from "./random";
 import { clamp01, makeNoise, smoothstep } from "./noise";
 

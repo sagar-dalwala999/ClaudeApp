@@ -1,5 +1,8 @@
 "use client";
 
+import Link from "next/link";
+import { LogoutForm } from "./LogoutLink";
+
 interface Props {
   sidebarHidden: boolean;
   onToggleSidebar(): void;
@@ -45,13 +48,17 @@ export function TopBar({ sidebarHidden, onToggleSidebar, filter, onFilter, title
           ref={findRef}
           className="find"
           type="search"
-          placeholder="Find elements"
-          aria-label="Find elements"
+          placeholder="Filter links"
+          aria-label="Filter links in this collection"
           value={find}
           onChange={(e) => onFind(e.target.value)}
           spellCheck={false}
           autoComplete="off"
         />
+        <Link className="hint" href="/settings" title="Tokens, resolver health, export">
+          system
+        </Link>
+        <LogoutForm />
       </div>
     </>
   );

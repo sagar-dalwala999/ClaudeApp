@@ -1,9 +1,14 @@
 import type { Metadata, Viewport } from "next";
+import { ServiceWorker } from "@/components/ServiceWorker";
 import "./globals.css";
+import "./ui.css";
 
 export const metadata: Metadata = {
   title: "Looks",
-  description: "A local-first visual archive browser rendered on canvas.",
+  description: "A personal link archive: paste a link and it is fetched, summarised and filed.",
+  // Served by app/manifest.webmanifest/route.ts, which keeps the share target.
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "Looks", statusBarStyle: "black-translucent" },
 };
 
 export const viewport: Viewport = {
@@ -15,7 +20,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <ServiceWorker />
+      </body>
     </html>
   );
 }

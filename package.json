@@ -1,25 +1,45 @@
 {
   "name": "looks",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:live": "vitest run --config vitest.live.config.mts",
+    "worker": "tsx src/server/jobs/worker.ts",
+    "db:migrate": "tsx src/server/db/migrate.ts",
+    "user:create": "tsx scripts/create-user.ts",
+    "tokens:create": "tsx scripts/create-token.ts",
+    "export:markdown": "tsx scripts/export-markdown.ts"
   },
   "dependencies": {
+    "aws4fetch": "^1.0.20",
+    "drizzle-orm": "^0.45.2",
     "next": "16.3.5",
+    "pg": "^8.23.0",
+    "pg-boss": "^12.31.1",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "sharp": "^0.35.4",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",
+    "@types/pg": "^8.15.5",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "eslint": "^9",
     "eslint-config-next": "16.3.5",
-    "typescript": "^5.9.3"
+    "tsx": "^4.23.13",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.0"
   }
 }

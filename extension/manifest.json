@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Looks — save to your archive",
+  "version": "0.2.0",
+  "description": "Capture the page you are on, including logged-in Instagram and X posts, into your own Looks archive.",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "optional_host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Save to Looks"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": { "default": "Ctrl+Shift+L", "mac": "Command+Shift+L" },
+      "description": "Save the current page to Looks"
+    }
+  }
+}

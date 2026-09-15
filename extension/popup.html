@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Save to Looks</title>
+    <style>
+      :root { color-scheme: dark; }
+      body {
+        width: 300px;
+        margin: 0;
+        padding: 14px;
+        background: #0b0b0b;
+        color: #d4d4d4;
+        font: 12px ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      }
+      h1 { margin: 0 0 10px; font-size: 13px; color: #ececec; }
+      button {
+        width: 100%;
+        padding: 8px;
+        background: #151515;
+        border: 1px solid #2e2e2e;
+        border-radius: 4px;
+        color: #ececec;
+        font: inherit;
+        cursor: pointer;
+      }
+      button:hover { background: #1b1b1b; }
+      button:disabled { opacity: 0.6; cursor: default; }
+      label { display: block; margin: 12px 0 0; color: #7c7c7c; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+      input {
+        width: 100%;
+        box-sizing: border-box;
+        margin-top: 4px;
+        padding: 6px 8px;
+        background: #101010;
+        border: 1px solid #232323;
+        border-radius: 4px;
+        color: #d4d4d4;
+        font: inherit;
+      }
+      #status { margin: 10px 0 0; line-height: 1.5; color: #7c7c7c; white-space: pre-wrap; }
+      #status.ok { color: #81c995; }
+      #status.error { color: #f28b82; }
+      details { margin-top: 12px; }
+      summary { color: #7c7c7c; cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <h1>Looks</h1>
+    <button id="save" type="button">Save this page</button>
+    <p id="status">Saves the page you are on, including a picture it can fetch.</p>
+
+    <details id="settings">
+      <summary>Connection</summary>
+      <label for="serverUrl">Server URL</label>
+      <input id="serverUrl" type="url" placeholder="https://looks.example.com" spellcheck="false" />
+      <label for="token">Ingest token</label>
+      <input id="token" type="password" placeholder="lk_…" spellcheck="false" />
+      <button id="test" type="button" style="margin-top: 10px">Save &amp; test</button>
+    </details>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

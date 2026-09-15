@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { LooksElement } from "@/lib/data";
+import type { ClientItem } from "@/lib/item";
 import { drawCover, getArt, subscribeArt } from "@/lib/art";
 import type { NavDir } from "@/lib/layout";
 import { hashString, mulberry32 } from "@/lib/random";
@@ -13,16 +13,16 @@ export interface GraphApi {
 }
 
 interface Props {
-  elements: LooksElement[];
+  elements: ClientItem[];
   selectedId: string | null;
   onSelect(id: string | null): void;
-  onOpen(el: LooksElement): void;
+  onOpen(el: ClientItem): void;
   emptyMessage?: string;
   apiRef: React.RefObject<GraphApi | null>;
 }
 
 interface Node {
-  el: LooksElement;
+  el: ClientItem;
   x: number;
   y: number;
   vx: number;
@@ -47,7 +47,7 @@ interface Graph {
 const MAX_NODES = 600;
 const THUMB_W = 96;
 
-function buildGraph(elements: LooksElement[], w: number, h: number): Graph {
+function buildGraph(elements: ClientItem[], w: number, h: number): Graph {
   const els = elements.slice(0, MAX_NODES);
   const rng = mulberry32(hashString(`${els.length}:${els[0]?.id ?? ""}:${els[els.length - 1]?.id ?? ""}`));
   const n = Math.max(1, els.length);
@@ -69,7 +69,7 @@ function buildGraph(elements: LooksElement[], w: number, h: number): Graph {
     nodes[a].degree++;
     nodes[b].degree++;
   };
-  const group = (keyOf: (el: LooksElement) => string[]) => {
+  const group = (keyOf: (el: ClientItem) => string[]) => {
     const groups = new Map<string, number[]>();
     els.forEach((el, i) => {
       for (const k of keyOf(el)) {
